@@ -7,16 +7,15 @@ from LSTM import LSTM
 import data_loader
 
 
-def train_model(loader, model, max_epochs, seq_length):
+def train_model(data, value, model, max_epochs, seq_length, batch_size):
     model.train()
 
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    data = loader.load_data()
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
     for epoch in range(max_epochs):
-        hidden_state, cell_state = model.init_state(1)
-
-        for batch, (x, y) in data:
+        hidden_state, cell_state = model.init_state(batch_size)
+        batch = 0
+        for x, y in zip(data, value):
             optimizer.zero_grad()
 
             y_pred, (hidden_state, cell_state) = model(x, (hidden_state, cell_state))
@@ -29,4 +28,5 @@ def train_model(loader, model, max_epochs, seq_length):
             optimizer.step()
 
             print({'epoch': epoch, 'batch': batch, 'loss': loss.item()})
+            batch += 1
     return (hidden_state, cell_state)

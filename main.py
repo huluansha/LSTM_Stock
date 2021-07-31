@@ -2,24 +2,25 @@ import train
 from LSTM import LSTM
 from data_loader import data_loader
 import matplotlib.pyplot as plt
-
+import torch
 def main():
+    batch_size = 4
     model = LSTM()
-    loader = data_loader()
+    loader = data_loader(batch_size = batch_size)
 
-    hidden_state, cell_state = train.train_model(loader, model, max_epochs = 10, seq_length = loader.seq_len)
-    #hidden_state, cell_state = model.init_state(1)
-    test_data = loader.load_data(tickers = ['AAPL'], start = '2020-01-02', end = '2021-07-01', numbers = 0)
+    train_x, train_y, test_x, test_y, scaler = loader.load_data(tickers = ['AAPL'],
+                                start = '2020-01-02', end = '2021-07-01', numbers = 0)
+    hidden_state, cell_state = train.train_model(train_x, train_y, model, max_epochs = 3, seq_length = loader.seq_len, batch_size = batch_size)
 
-    test_diff = []
-    x_axis_val = range(len(test_data))
-    for batch, (x, y) in test_data:
-        y_predict, _ = model(x, (hidden_state, cell_state))
-        test_diff.append([y.tolist()[0], y_predict.tolist()[0]])
+    actual, prediction = [], []
+    x_axis_val = range(test_x.shape[0] * test_x.shape[1])
+    for x, y in zip(test_x, test_y):
+        y_predict, (hidden_state, cell_state) = model(x, (hidden_state, cell_state))
+        actual.extend(torch.flatten(y).tolist())
+        prediction.extend(torch.flatten(y_predict).tolist())
 
-
-    # plt.plot(x_axis_val, [x[0] for x in test_diff], label = 'actual')
-    plt.plot(x_axis_val, [x[1] for x in test_diff], label = 'predict')
+    plt.plot(x_axis_val, actual, label = 'actual')
+    plt.plot(x_axis_val, prediction, label = 'predict')
     plt.savefig("aapl.png")
     plt.legend()
     plt.show()
