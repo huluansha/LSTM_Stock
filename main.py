@@ -3,28 +3,38 @@ from LSTM import LSTM
 from data_loader import data_loader
 import matplotlib.pyplot as plt
 import torch
+from sklearn.preprocessing import MinMaxScaler
+
 def main():
-    batch_size = 4
-    model = LSTM()
-    loader = data_loader(batch_size = batch_size)
+    tickers = ['AAPL']
+    features = ['open','high','low','volume','closeadj']
+    hidden_size, hidden_layer, lookback, epochs = 32, 2, 60, 100
+    start_date, end_date = '2012-01-01', '2019-12-31'
 
-    train_x, train_y, test_x, test_y, scaler = loader.load_data(tickers = ['AAPL'],
-                                start = '2020-01-02', end = '2021-07-01', numbers = 0)
-    hidden_state, cell_state = train.train_model(train_x, train_y, model, max_epochs = 3, seq_length = loader.seq_len, batch_size = batch_size)
+    loader = data_loader(seq_len = lookback, select_features = features)
+    model = LSTM(input_size = len(features), hidden_size = hidden_size, layer = hidden_layer)
+    data = loader.load_data(tickers = tickers, start = start_date, end = end_date)
+    output, hs = train.train_model(data, model, max_epochs = epochs)
 
-    actual, prediction = [], []
-    x_axis_val = range(test_x.shape[0] * test_x.shape[1])
-    for x, y in zip(test_x, test_y):
-        y_predict, (hidden_state, cell_state) = model(x, (hidden_state, cell_state))
-        actual.extend(torch.flatten(y).tolist())
-        prediction.extend(torch.flatten(y_predict).tolist())
+    for ticker, ticker_data in zip(tickers, data):
+        _, _, x, y, scaler = ticker_data
+        hidden_state, cell_state = model.init_state(x.shape[0])
+        y_predict, _ = model(x, (hidden_state, cell_state))
+        price_scaler = MinMaxScaler()
+        price_scaler.min_, price_scaler.scale_ = scaler.min_[-1], scaler.scale_[-1]
+        actual, prediction = price_scaler.inverse_transform([torch.flatten(y).tolist()]), \
+                             price_scaler.inverse_transform([torch.flatten(y_predict).tolist()])
 
-    plt.plot(x_axis_val, actual, label = 'actual')
-    plt.plot(x_axis_val, prediction, label = 'predict')
-    plt.savefig("aapl.png")
-    plt.legend()
-    plt.show()
-    plt.close()
+        x_axis_val = range(actual.shape[1])
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(x_axis_val, actual[0], color='tab:blue', label = 'actual')
+        ax.plot(x_axis_val, prediction[0], color='tab:orange', label = 'prediction')
+        plt.savefig("{}.png".format(ticker))
+        plt.show(block=False)
+        plt.pause(3)
+        plt.close()
+
 
 
 
