@@ -13,6 +13,8 @@ class data_loader:
 
     def load_data(self, tickers, start, end, split, predict_price, min_days = 0):
         data_holder = []
+        if not predict_price:
+            self.select_features.append("new_y")
         for ticker in tickers:
             table = quandl.get_table('SHARADAR/SEP',
                                      qopts={"columns":['ticker' ,'date','open','high','low','close','volume','closeadj']},
@@ -20,6 +22,9 @@ class data_loader:
                                      ticker=ticker)
 
             table = table.reindex(index=table.index[::-1]) # reverse, table[0] is the earliest day
+
+            if not predict_price:
+                table["new_y"] = table["closeadj"] - table["open"]
 
             if table.shape[0] < min_days:
                 raise("Not Enough Data for tick {}".format(ticker))
@@ -42,19 +47,13 @@ class data_loader:
                 test_x, test_y = [], []
                 for i in range(self.seq_len, training_size):
                     x = feature_sequence[i - self.seq_len:i]
-                    if predict_price:
-                        y = feature_sequence[i, -1]
-                    else: # predict diff
-                        y = feature_sequence[i, -1] -  feature_sequence[i - 1, -1]
+                    y = feature_sequence[i, -1]
                     train_x.append(x)
                     train_y.append(y)
 
                 for i in range(training_size, len(feature_sequence)):
                     x = feature_sequence[i - self.seq_len:i]
-                    if predict_price:
-                        y = feature_sequence[i, -1]
-                    else: # predict diff
-                        y = feature_sequence[i, -1] -  feature_sequence[i - 1, -1]
+                    y = feature_sequence[i, -1]
                     test_x.append(x)
                     test_y.append(y)
 

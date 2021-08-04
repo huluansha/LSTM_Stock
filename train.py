@@ -5,14 +5,17 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from LSTM import LSTM
 import data_loader
+import matplotlib.pyplot as plt
 
 
-def train_model(data, model, max_epochs, rate, batch_size = None, shuffle = False):
+def train_model(data, model, max_epochs, rate, weight_decay = 1e-5, batch_size = None, shuffle = False):
     model.train()
 
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=rate)
-    print(model.parameters)
+    optimizer = optim.Adam(model.parameters(), lr=rate, weight_decay=weight_decay)
+    # print(model.parameters)
+    plot_curve = False
+    error_list = []
     for epoch in range(max_epochs):
         for ticker_data in data:
             x, y, _, _, _, _ = ticker_data
@@ -36,6 +39,17 @@ def train_model(data, model, max_epochs, rate, batch_size = None, shuffle = Fals
                 optimizer.step()
                 i += batch_size
 
-                print({'epoch': epoch, 'batch': batch, 'loss': loss.item()})
+                # print({'epoch': epoch, 'batch': batch, 'loss': loss.item()})
                 batch += 1
+                error_list.append(loss.tolist())
+    if plot_curve:
+        fig = plt.figure(dpi=1200)
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(range(max_epochs), error_list, color='#C71585', linewidth=1)
+
+        plt.ylabel('Error')
+        plt.xlabel('Epochs')
+
+        plt.savefig("learning_curve.png")
+
     return model.eval(), hidden_state, cell_state
