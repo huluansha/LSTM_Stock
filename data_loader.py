@@ -22,7 +22,7 @@ class data_loader:
                                      ticker=ticker)
 
             table = table.reindex(index=table.index[::-1]) # reverse, table[0] is the earliest day
-
+            print(table.shape[0], ticker)
             if not predict_price:
                 table["new_y"] = table["closeadj"] - table["open"]
 
@@ -82,7 +82,11 @@ class data_loader:
 
         return data_holder
 
+if __name__ == "__main__":
+    loader = data_loader(10, ['open','high','low','close',] )
+
+    tickers = ['MSFT', 'AMZN', 'FB', 'GOOGL', 'GOOG', 'BRK.B', 'TSLA', 'NVDA', 'JPM', 'JNJ', 'V', 'UNH', 'HD', 'PG', 'MA', 'PYPL', 'DIS', 'ADBE', 'BAC']
 
 
-
+    loader.load_data(tickers, '2012-01-01', '2021-7-1', 0.8, True)
 

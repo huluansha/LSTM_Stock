@@ -16,14 +16,18 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
 def main():
-    tickers = ['AAPL']
-    tickers = ['MSFT', 'AMZN', 'FB', 'GOOGL', 'GOOG', 'BRK.B', 'TSLA', 'NVDA', 'JPM', 'JNJ', 'V', 'UNH', 'HD', 'PG', 'MA', 'PYPL', 'DIS', 'ADBE', 'BAC']
+    #tickers = ['AAPL']
+    tickers = ['MSFT', 'AMZN', 'GOOGL', 'BRK.B', 'TSLA', 'NVDA', 'JPM', 'JNJ', 'V', 'UNH', 'HD', 'PG', 'MA', 'DIS', 'ADBE', 'BAC']
+
+    #tickers = ['MSFT', 'AMZN', 'FB', 'GOOGL', 'GOOG', 'BRK.B', 'TSLA', 'NVDA', 'JPM', 'JNJ', 'V', 'UNH', 'HD', 'PG', 'MA', 'PYPL', 'DIS', 'ADBE', 'BAC']
+    #tickers = ['AMZN', 'BAC']
+
     features = ['open','high','low','volume','closeadj']
     count, learning_rate, weight_decay, hidden_size, hidden_layer, lookback, epochs, split, batch_size, stateless, shuffle, bidirection, bias, predict_price \
-                            = 1, 0.01, 0, 64, 1, 60, 100, 0.80, 128, False, False, False, True, True
+                            = 2, 0.01, 0, 64, 1, 60, 60, 0.85, None, False, False, False, True, True
     # count, learning_rate, weight_decay, hidden_size, hidden_layer, lookback, epochs, split, batch_size, stateless, shuffle, bidirection, bias, predict_price \
     #      = arguments
-    start_date, end_date = '2012-01-01', '2019-12-31'
+    start_date, end_date = '2012-01-01', '2021-7-1'
 
     loader = data_loader(seq_len = lookback, select_features = features)
     model = LSTM(input_size = len(features) + 1 if not predict_price else len(features), hidden_size = hidden_size, layer = hidden_layer, bidirectional=bidirection)
@@ -95,40 +99,40 @@ def main():
         # plt.pause(3)
         # plt.close()
 
-    ##################
-    # numberofstocks = len(predict_list)
-    # endValues = []
-    # benchmarkValues = []
-    # temp = 100000
-    # open_test = []
-    # for j in range(numberofstocks):
-    #     open_test.append(open_list[j][0])
-    # shares = buyAndHold(open_test, 100000)  # [10,5]
-    #
-    # for i in range(len(predict_list[0])):
-    #     y_pre = []
-    #     close = []
-    #     open = []
-    #     bechmarkValue = 0
-    #     for j in range(numberofstocks):
-    #         y_pre.append(predict_list[j][i])
-    #         close.append(close_list[j][i])
-    #         open.append(open_list[j][i])
-    #         bechmarkValue += shares[j] * close_list[j][i]
-    #     end_vals = calculateReturn(y_pre, open, close, temp)
-    #     temp = end_vals
-    #     endValues.append(end_vals)
-    #     benchmarkValues.append(bechmarkValue)
-    #
-    # fig, ax = plt.subplots()
-    #
-    # ax.plot(table["date"][train_size:], endValues, label='my strategy')
-    # ax1 = ax
-    # ax1.plot(table["date"][train_size:], benchmarkValues, label='benchmark')
-    #
-    # plt.xticks(rotation=30)
-    # plt.legend(loc='upper left')
-    # plt.savefig('return.png')
+    #################
+    numberofstocks = len(predict_list)
+    endValues = []
+    benchmarkValues = []
+    temp = 100000
+    open_test = []
+    for j in range(numberofstocks):
+        open_test.append(open_list[j][0])
+    shares = buyAndHold(open_test, 100000)  # [10,5]
+
+    for i in range(len(predict_list[0])):
+        y_pre = []
+        close = []
+        open = []
+        bechmarkValue = 0
+        for j in range(numberofstocks):
+            y_pre.append(predict_list[j][i])
+            close.append(close_list[j][i])
+            open.append(open_list[j][i])
+            bechmarkValue += shares[j] * close_list[j][i]
+        end_vals = calculateReturn(y_pre, open, close, temp)
+        temp = end_vals
+        endValues.append(end_vals)
+        benchmarkValues.append(bechmarkValue)
+
+    fig, ax = plt.subplots()
+
+    ax.plot(table["date"][train_size:], endValues, label='my strategy')
+    ax1 = ax
+    ax1.plot(table["date"][train_size:], benchmarkValues, label='benchmark')
+
+    plt.xticks(rotation=30)
+    plt.legend(loc='upper left')
+    plt.savefig('return.png')
 
     # buy and hold
 
